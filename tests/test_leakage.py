@@ -61,27 +61,6 @@ def test_no_missing_values(feats):
     assert feats[feature_columns(feats)].isna().sum().sum() == 0
 
 
-def test_tempest_is_mean_of_a_temp_and_temp(feats):
-    """Verify tempest feature equals the mean of atemp and temp."""
-    # Pick a date where we have valid data for both temperature features
-    valid_row = feats[(feats.atemp.notna()) & (feats.temp.notna())].iloc[0]
-    expected = (valid_row["atemp"] + valid_row["temp"]) / 2.0
-    actual = valid_row["tempest"]
-    assert actual == pytest.approx(expected), f"tempest={actual}, expected={expected} at {valid_row.dteday.date()}"
-
-
-def test_tempest_has_no_future_leakage(feats):
-    """Verify tempest on date d does not use info from dates >= d."""
-    # Since we just average two same-day features, there's no leakage by design.
-    # But let's verify on a known date with actual values.
-    test_date = pd.Timestamp("2011-06-15")  # Pick a mid-year date in train set
-    if test_date.date() in feats.dteday:
-        row = feats.loc[feats.dteday == test_date]
-        if not row.empty:
-            vrow = row.iloc[0]
-            expected = (vrow["atemp"] + vrow["temp"]) / 2.0
-            assert abs(vrow["tempest"] - expected) < 1e-6
-
 
 def test_dates_are_sorted_and_unique(feats):
     assert feats.dteday.is_monotonic_increasing

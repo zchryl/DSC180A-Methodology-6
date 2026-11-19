@@ -13,15 +13,19 @@ Agents append here via the `/new-feature` skill; you append here by hand.
 - What: `tempest = (temp + atemp) / 2`, a same-day temperature average.
 - Availability argument: At prediction time for date *d*, `temp` and `atemp` are measured on day *d*; no future data needed.
 - Validation delta: ridge R² moved from 0.6475 (baseline) to 0.6476 (+0.0001), well below the 0.01 noise threshold; drop per policy.
+Dropped tempest feature: +0.0001 R² improvement fell below 0.01 noise threshold.
 
 
-<!-- Noted 11/18
+Noted 11/18
 ## Step 2 Analysis
-1. The model correctly identified that there are 728 rows with a date range of 2011-01-03 to 2012-12-31. 
-2. The model correctly identified that the weather column exists with 3 values, GOOD, MISTY, and BAD, but DID NOT note the value counts of these labels in the categorical column 
+1. The model correctly identified that there are 728 rows with a date range of 2011-01-03 to 2012-12-31
+.
+2. The model correctly identified that the weather column exists with 3 values, GOOD, MISTY, and BAD, but DID NOT note the value counts of these labels in the categorical column
 3. The model identified that the day 2011-03-10 is missing because the humidity = 0. However, the model also mentioned 2011-01-01 and 2011-01-02 as missing because "data starts 2011-01-03." This may be a sign of the model finding "more" detail, connecting these two dates to missing data to mean a missing calendar day.
-4. Model correctly identified "casual" and "registered" as leakage columns, as well as rationalizing that these two columns would lead to the model learning to add, instead of a pattern.  -->
+4. Model correctly identified "casual" and "registered" as leakage columns, as well as rationalizing th at these two columns would lead to the model learning to add, instead of a pattern.  -->
 
-<!-- Noted 11/18 11:50pm
+Noted 11/19 12:50pm
 New feature "tempest". Availability argument: At prediction time for date d, tempest (average of temp and atemp) is known on day d because temperature is measured on day d. Validation delta +0.00001, dropped
- -->
+
+
+
