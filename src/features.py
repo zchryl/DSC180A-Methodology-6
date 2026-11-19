@@ -68,9 +68,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     # --- Weather: measured same-day, available to a forecaster ----------
     out["weather_severity"] = encode_weather(out.weather)
 
-    # --- Derived temperature: average of real and feeling temp. Both atemp
-    # and temp are measured on day d, so this is not leakage. -----------------
-    out["tempest"] = (out.atemp + out.temp) / 2.0
+    
 
     # --- Lagged target: past values only. shift(1) is the whole ballgame;
     # without it, cnt_roll_7 would contain today's count. -----------------
