@@ -1,4 +1,4 @@
-## Seeded Fault #1, Forbidden Column in feature_columns (src/features.py)
+# Seeded Fault #1, Forbidden Column in feature_columns (src/features.py)
 In order to fire off the hook's stderr, the edit that causes the error is done through a Claude prompt, specifically *"In src/features.py, edit feature_columns so that it returns the list of feature columns plus "casual". Do not run tests or fix it yet."* 
 
 This modified `feature_columns()` to store the original list it returned, `[c for c in numeric if c not in FORBIDDEN]` in a variable called filtered. Then, the function now ends with `return ["casual"] + filtered`. Previously, the last line in `feature_columns()` was `return [c for c in numeric if c not in FORBIDDEN]` which has now been replaced by 2 lines: 
@@ -87,4 +87,66 @@ python -m pytest tests/ -q
 14 passed in 10.43s
 ```
 
-## Total turns to fix Seeded Fault #1 in feature columns: 2
+## Total turns to fix Seeded Fault #1 in feature columns: 2 
+
+# Seeded Fault #2 delete .shift(1) from cnt_roll_7
+
+Claude was prompted with *"inside features.py remove the ".shift(1)" from cnt_roll_7 but do not run any tests afterwards or attempt to fix it"*
+
+This modified the original line `out["cnt_roll_7"] = out[TARGET].shift(1).rolling(LAG_WARMUP).mean()` to `out["cnt_roll_7"] = out[TARGET].rolling(LAG_WARMUP).mean()` 
+
+This caused PostToolHook to send out the stderr
+```
+PostToolUse:Edit hook reported a problem
+[${CLAUDE_PROJECT_DIR}/.claude/hooks/check_leakage.sh]: Leakage tests failed after editing C:\Users\night\Downloads\bikeshare-open\src\features.py:
+[714 rows x 28 columns]
+
+    def test_rolling_mean_excludes_today(feats):
+        """cnt_roll_7 must be the mean of the 7 calendar days *before* today."""
+        by_date = feats.set_index("dteday")[TARGET]
+        date = feats.dteday.iloc[200]
+        window = [date - pd.Timedelta(days=k) for k in range(1, 8)]
+        if all(d in by_date.index for d in window):
+            expected = sum(by_date[d] for d in window) / 7
+>           assert feats.set_index("dteday").cnt_roll_7[date] == pytest.approx(expected)
+E           assert np.float64(4389.0) == 4414.857142857143 +/- 0.00441486
+E
+E             comparison failed
+E             Obtained: 4389.0
+E             Expected: 4414.857142857143 +/- 0.00441486
+
+tests\test_leakage.py:57: AssertionError
+=============================================== short test summary info ===============================================
+FAILED tests/test_leakage.py::test_rolling_mean_excludes_today - assert np.float64(4389.0) == 4414.857142857143 � 0.0...
+1 failed, 6 passed in 3.01s
+```
+
+Claude was then prompted with "*Fix the issue causing the hook to throw a stderr for cnt_roll_7*" to see how many turns it took to fix this fault 
+```
+I need to add the .shift(1) back to cnt_roll_7 so that the rolling mean excludes today's value (as required by the leakage tests and good forecasting practice).
+
+● Update(src\features.py)
+Added 1 line, removed 1 line
+    # If you add a longer lag, raise LAG_WARMUP in src/config.py.
+    out["cnt_lag_1"] = out[TARGET].shift(1)
+    out["cnt_lag_7"] = out[TARGET].shift(LAG_WARMUP)
+    - out["cnt_roll_7"] = out[TARGET].rolling(LAG_WARMUP).mean()
+    + out["cnt_roll_7"] = out[TARGET].shift(1).rolling(LAG_WARMUP).mean()
+
+    return out.dropna().reset_index(drop=True)
+
+
+  Thought for 2s
+
+Fixed. The .shift(1) has been restored on line 78, so cnt_roll_7 again excludes today's count and only uses past 7 days for its rolling mean.
+```
+The previously incorrect line  `out["cnt_roll_7"] = out[TARGET].rolling(LAG_WARMUP).mean()` was changed back to `out["cnt_roll_7"] = out[TARGET].shift(1).rolling(LAG_WARMUP).mean()` in accordance to the description of the variable definition.
+```
+make test
+python -m pytest tests/ -q
+..............                                                                                                   [100%]
+14 passed in 10.12s
+```
+
+## Turns taken to fix: 1
+    
