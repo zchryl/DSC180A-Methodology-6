@@ -6,7 +6,7 @@ This modified `feature_columns()` to store the original list it returned, `[c fo
 `filtered = [c for c in numeric if c not in FORBIDDEN]` and `return ["casual"] + filtered`
 
 ### The PostToolUse hook sent the stderr:
-
+```
 PostToolUse:Edit hook reported a problem
 [${CLAUDE_PROJECT_DIR}/.claude/hooks/check_leakage.sh]: Leakage tests failed after editing C:\Users\night\Downloads\bikeshare-open\src\features.py:
 
@@ -29,6 +29,7 @@ tests\test_leakage.py:31: AssertionError
 =============================================== short test summary info ===============================================
 FAILED tests/test_leakage.py::test_no_forbidden_features - AssertionError: forbidden columns in feature set: {'casual'}
 1 failed, 6 passed in 0.65s
+```
 
 ## Turns to Correct: 2
 For this, turn will be defined as: 1 prompt fix = 1 turn, any looping in this 1 fix will accumulate as multiple turns, with each incorrect iteration in the same prompt from Claude being a turn. Reprompts will also count as a turn. 
@@ -140,7 +141,7 @@ Added 1 line, removed 1 line
 
 Fixed. The .shift(1) has been restored on line 78, so cnt_roll_7 again excludes today's count and only uses past 7 days for its rolling mean.
 ```
-The previously incorrect line  `out["cnt_roll_7"] = out[TARGET].rolling(LAG_WARMUP).mean()` was changed back to `out["cnt_roll_7"] = out[TARGET].shift(1).rolling(LAG_WARMUP).mean()` in accordance to the description of the variable definition.
+The previously incorrect line  `out["cnt_roll_7"] = out[TARGET].rolling(LAG_WARMUP).mean()` was changed back to `out["cnt_roll_7"] = out[TARGET].shift(1).rolling(LAG_WARMUP).mean()` in accordance to the description in the variable definition.
 ```
 make test
 python -m pytest tests/ -q
