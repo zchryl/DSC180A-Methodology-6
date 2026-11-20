@@ -150,4 +150,75 @@ python -m pytest tests/ -q
 ```
 
 ## Turns taken to fix: 1
-    
+
+# Seeded Fault #3 Removing `raise` in weather encoder
+Claude was prompted *"in features.py remove the "raise" from encode_weather. do not test or attempt to fix this"*
+
+This removed the entire check for appearances of unknown weather labels, completely removing the lines 
+
+```
+    """Ordinal-encode weather, failing loudly on unseen labels.
+    A silent `.map()` turns an unexpected label into NaN, which a later
+    `dropna()` deletes without comment. That is how the 20 BAD-weather
+    days -- the most interesting days in the dataset -- disappear with no
+    error and no warning.
+    """
+    known = series.dropna()
+    unknown = set(known.unique()) - set(WEATHER_ORDER)
+    if unknown:
+        raise ValueError(f"unmapped weather labels: {sorted(unknown)}")
+``` 
+
+This is the exact change:
+
+```
+def encode_weather(series: pd.Series) -> pd.Series:
+-    """Ordinal-encode weather, failing loudly on unseen labels.
+-
+-    A silent `.map()` turns an unexpected label into NaN, which a later
+-    `dropna()` deletes without comment. That is how the 20 BAD-weather
+-    days -- the most interesting days in the dataset -- disappear with no
+-    error and no warning.
+-    """
+-    known = series.dropna()
+-    unknown = set(known.unique()) - set(WEATHER_ORDER)
+-    if unknown:
+-        raise ValueError(f"unmapped weather labels: {sorted(unknown)}")
++    """Ordinal-encode weather."""
+     return series.map(WEATHER_ORDER).astype(float)
+``` 
+
+## No Stderr is caused by the hook because the PostToolUse hook only runs test_leakage.py reporting when a test fails. `test_leakage` doesn't check unknown weather labels on existing dataset, so no unexpected NaNs that would raise an error - were produced 
+
+## Fixing this seeded fault 
+Claude was prompted with *"Fix the raise ValueError guard from encode_weather"*
+
+### The agent only took 1 turn to fix this fault:
+```
+Update(src\features.py)
+Added 11 lines, removed 1 line
+
+
+ def encode_weather(series: pd.Series) -> pd.Series:
+-    """Ordinal-encode weather."""
++    """Ordinal-encode weather, failing loudly on unseen labels.
++
++    A silent `.map()` turns an unexpected label into NaN, which a later
++    `dropna()` deletes without comment. That is how the 20 BAD-weather
++    days -- the most interesting days in the dataset -- disappear with no
++    error and no warning.
++    """
++    known = series.dropna()
++    unknown = set(known.unique()) - set(WEATHER_ORDER)
++    if unknown:
++        raise ValueError(f"unmapped weather labels: {sorted(unknown)}")
+     return series.map(WEATHER_ORDER).astype(float)
+``` 
+The `raise ValueError` guard and docstring were restored. `make test` runs without error.
+
+```
+make test
+python -m pytest tests/ -q
+..............                                                                                                   [100%]
+14 passed in 1.49s
+``` 

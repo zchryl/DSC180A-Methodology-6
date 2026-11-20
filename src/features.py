@@ -17,7 +17,17 @@ WEATHER_ORDER = {"GOOD": 0, "MISTY": 1, "BAD": 2}
 
 
 def encode_weather(series: pd.Series) -> pd.Series:
-    """Ordinal-encode weather."""
+    """Ordinal-encode weather, failing loudly on unseen labels.
+
+    A silent `.map()` turns an unexpected label into NaN, which a later
+    `dropna()` deletes without comment. That is how the 20 BAD-weather
+    days -- the most interesting days in the dataset -- disappear with no
+    error and no warning.
+    """
+    known = series.dropna()
+    unknown = set(known.unique()) - set(WEATHER_ORDER)
+    if unknown:
+        raise ValueError(f"unmapped weather labels: {sorted(unknown)}")
     return series.map(WEATHER_ORDER).astype(float)
 
 
