@@ -1,0 +1,1 @@
+- [seeded-fault-casual-in-feature-columns](seeded-fault-casual-in-feature-columns.md) — Seeded fault testing "casual" leakage guard in feature_columns()

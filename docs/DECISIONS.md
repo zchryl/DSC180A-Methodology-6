@@ -27,5 +27,7 @@ Noted 11/18
 Noted 11/19 12:50pm
 New feature "tempest". Availability argument: At prediction time for date d, tempest (average of temp and atemp) is known on day d because temperature is measured on day d. Validation delta +0.00001, dropped
 
+Noted 11/19 10:20pm
+Created skill /seed-fault. Directions **explicitly** list the outputs and *hook stderr* if any arose to replicate Exercise 2 findings. Also show code changes, run make test before/after to verify code untouched 
 
 
